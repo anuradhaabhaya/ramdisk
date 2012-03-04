@@ -7,37 +7,36 @@
 
 #include "../headers/ramdisk.h"
 
-int
-main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
-  if (charger_disque() == 1)
-    {
-      printf("Disque chargé\n");
+	if (charger_disque() == 1)
+	{
+		printf("Disque chargé\n");
 
-      affiche_superbloc();
-      afficher_map_bloc();
-      afficher_map_inode();
+		affiche_superbloc();
+		afficher_map_bloc();
+		afficher_map_inode();
 
-      /* Modifications ... */
+		/* Modifications ... */
 
-      sauvegarder_disque();
-    }
-  else if (charger_disque() == 0)
-    {
-      printf("Erreur : pas de disque\n");
+		sauvegarder_disque();
+	}
+	else if (charger_disque() == 0)
+	{
+		printf("Erreur : pas de disque\n");
 
-      printf("Creation d'un nouveau disque\n");
-      creer_disque();
-      printf("Disque créé\n");
+		printf("Creation d'un nouveau disque\n");
+		creer_disque();
+		printf("Disque créé\n");
 
-      affiche_superbloc();
-      afficher_map_bloc();
-      afficher_map_inode();
+		affiche_superbloc();
+		afficher_map_bloc();
+		afficher_map_inode();
 
-      sauvegarder_disque();
-    }
+		sauvegarder_disque();
+	}
 
-  printf("Fin du code\n");
-  return 0;
+	printf("Fin du code\n");
+	return 0;
 }
 
