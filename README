@@ -1,0 +1,9 @@
+Projet ramdisk : version du 4 Mars 2012
+
+Pour compiler :
+	gcc src/ramdisk.c src/main.c -Wall -o projet
+
+Tester les fuites mémoires avec Valgrind sous ubuntu :
+	valgrind --tool=memcheck --leak-check=full --leak-resolution=high --show-reachable=yes ./projet
+
+
