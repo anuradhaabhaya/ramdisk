@@ -14,13 +14,12 @@ extern ramdisk_s disque;
 /* int chargement_disque()
  *     Action           Charger le ramdisk contenu dans un fichier vers la variable globale disque
  *
- *     Retourne         1       pas d'erreurs
- *                      0       erreur (fichier contenant le ramdisk qui n'existe pas ou
- *                              probleme lors de la lecture)
+ *     Retourne         ERREUR	en cas d'erreur (erreur lors fopen ou erreur lors fread)
+ *     					(Tester != erreur)
  */
 int charger_disque()
 {
-	int ret = 0;
+	int ret = 0; /* Code de retour */
 
 	FILE* fichier = fopen(FICHIER, "rb"); /* Acces en lecture : mode rb */
 
@@ -33,33 +32,33 @@ int charger_disque()
 		fclose(fichier);
 	}
 
+	if (ret != 1) /* Si probleme lors lecture */
+		ret = ERREUR;
+
 	return ret;
 }
 
 /* int sauvegarder_disque()
  *     Action           Stocker la variable globale disque dans un fichier
  *
- *     Retourne         1       pas d'erreurs
- *                      0       sinon
+ *     Retourne         ERREUR en cas d'erreurs
+ *     					(tester != ERREUR)
  */
-
 int sauvegarder_disque()
 {
 	int ret = 0;
 
-	FILE* fichier;
+	FILE* fichier = fopen(FICHIER, "wb+"); /* On ecrase l'ancien disque : mode wb+ */
 
-	// On ecrase l'ancien disque : mode wb+
-	fichier = fopen(FICHIER, "wb+");
-
-	// Si l'ouverture a reussie
 	if (fichier != NULL)
 	{
-		// Recopier l'intégralité du ramdisk dans un fichier
-		ret = fwrite(&disque, sizeof(ramdisk_s), 1, fichier);
+		ret = fwrite(&disque, sizeof(ramdisk_s), 1, fichier); /* Recopier l'intégralité du ramdisk dans un fichier */
 
 		fclose(fichier);
 	}
+
+	if (ret != 1) /* Si erreur lors ecriture */
+		ret = ERREUR;
 
 	return ret;
 }
@@ -117,13 +116,65 @@ void creer_maps()
 	for (i = 0; i < 3; i++)
 		modifier_map(inodes, i, 1);
 
-	/* Uniquement les blocs reserves sont occupes : verifier + - 1 : < =  */
-	/* Pas besoin de parcourir la map des blocs : tout est deja a 0 (?) */
+	/* Pas besoin de parcourir la map des blocs : tout est deja a 0 */
+}
 
-	//*
-	for (i = 0; i < BLOCS_RESTANTS; i++)
-		modifier_map(blocs, i, 0);
-	//*/
+/* void liberer_id(map_e map, uint16_t id)
+ * 		Arguments
+ * 			map_e map
+ * 			uint16_t id
+ *
+ * 		Action
+ * 			Met l'état à 0 de l'id "id" dans la map "map"
+ */
+void liberer_id(map_e map, uint16_t id)
+{
+	if (map == blocs)
+	{
+		modifier_map(blocs, id, 0);
+	}
+	else if (map == inodes)
+	{
+		modifier_map(inodes, id, 0);
+	}
+}
+
+/* int recuperer_id(map_e map)
+ * 		Arguments
+ * 			map_e map
+ *
+ * 		Action
+ * 			Récupère le premier bloc/inode disponible et passe son état à utilisé (1)
+ *
+ * 		Retourne
+ * 			Id du premier/inode disponible
+ *			ERREUR en cas d'erreur
+ */
+int recuperer_id(map_e map)
+{
+	int i = 0;
+	int max = 0;
+
+	if (map == blocs)
+		max = BLOCS_RESTANTS;
+	else if (map == inodes)
+		max = NB_INODES;
+
+	octet recup = info_map(map, i); /* On recupere le premier element : i = 0*/
+
+	while (recup == 1 && i < max) /* Tant qu'on parcourt des id occupes */
+	{
+		i = i + 1;
+		recup = info_map(map, i); /* On recupere l'état de l'octet à la position i */
+	}
+
+	if (recup != ERREUR) /* On quitte la boucle, on regarde si l'état est valide ( != ERREUR ) */
+		modifier_map(map, i, 1); /* Et on met à 1 dans la map*/
+
+	else
+		i = ERREUR;
+
+	return i;
 }
 
 /* octet info_map(map_e, int pos)
@@ -140,23 +191,30 @@ void creer_maps()
  */
 octet info_map(map_e map, int pos)
 {
-	octet o = 0;
+	octet recup = ERREUR;
 	char masque = 7 - (pos % 8);
 	int num_octet = (pos % (8 * TAILLE_BLOC)) / 8;
+	int args_valides = 0; /* 1 si les arguments sont corrects */
 
-	if (map == blocs)
+	if (map == blocs && BLOC_VALIDE(pos))
 	{
-		o = disque.blocs_map.donnee[num_octet];
-	}
-	else if (map == inodes)
-	{
-		o = disque.inodes_map.donnee[num_octet];
+		args_valides = 1;
+		recup = disque.blocs_map.donnee[num_octet];
 	}
 
-	o = o >> masque;
-	o = o & 1;
+	else if (map == inodes && INODE_VALIDE(pos))
+	{
+		args_valides = 1;
+		recup = disque.inodes_map.donnee[num_octet];
+	}
 
-	return o;
+	if (args_valides)
+	{
+		recup = recup >> masque;
+		recup = recup & 1;
+	}
+
+	return recup;
 }
 
 /* void modifier_map(map_e, int pos, int val)
@@ -172,27 +230,30 @@ octet info_map(map_e map, int pos)
 void modifier_map(map_e map, int pos, uint8_t val)
 {
 	bloc_s *ptr = NULL; /* Pointe sur la map à modifier (bloc 1 ou 2)*/
-
 	octet masque = 1 << (7 - (pos % 8)); /* Sert à modifier le bit à la position pos */
-	octet o; /* octet de la map qui sera modifie */
+	octet recup = ERREUR; /* octet de la map qui sera modifie */
 	int num_octet = (pos % (8 * TAILLE_BLOC)) / 8; /* numero de l'octet dans le bloc a modifier */
+	int args_valides = 0;
 
-	// Initialisation des variables
-	if (map == blocs)
+// Initialisation des variables
+	if (map == blocs && BLOC_VALIDE(pos) && EST_BIT(val))
 	{
-		o = disque.blocs_map.donnee[num_octet];
+		args_valides = 1;
+		recup = disque.blocs_map.donnee[num_octet];
 		ptr = &disque.blocs_map;
 	}
-	else if (map == inodes)
+	else if (map == inodes && INODE_VALIDE(pos))
 	{
-		o = disque.inodes_map.donnee[num_octet];
+		args_valides = 1;
+		recup = disque.inodes_map.donnee[num_octet];
 		ptr = &disque.inodes_map;
 	}
 
-	o = modifier_octet(o, masque, val); /* Calcul du nouvel octet */
-
-	ptr->donnee[num_octet] = o; /* Remplacement de l'ancien octet par l'octet o qui vient d'etre calculé */
-
+	if (args_valides)
+	{
+		recup = modifier_octet(recup, masque, val); /* Calcul du nouvel octet */
+		ptr->donnee[num_octet] = recup; /* Remplacement de l'ancien octet par l'octet o qui vient d'etre calculé */
+	}
 }
 
 /* octet modifier_octet(octet o, octet masque, uint8_t val);
@@ -217,7 +278,14 @@ octet modifier_octet(octet o, octet masque, uint8_t val)
 
 /* Affichage d'informations : debug */
 
-void affiche_superbloc()
+void afficher_disque()
+{
+	afficher_superbloc();
+	afficher_map_bloc();
+	afficher_map_inode();
+}
+
+void afficher_superbloc()
 {
 	superbloc_s* ptr = (superbloc_s *) &disque.superbloc;
 
@@ -235,7 +303,7 @@ void afficher_map_bloc()
 {
 	int i;
 
-	printf("Affichage de la map des blocs :\n");
+	printf("\nAffichage de la map des blocs :\n");
 
 	for (i = 0; i < BLOCS_RESTANTS; i = i + 1)
 		printf("%d", info_map(blocs, i));
@@ -248,8 +316,8 @@ void afficher_map_inode()
 	int i;
 	superbloc_s* ptr = (superbloc_s *) &disque.superbloc;
 
-	// tester ptr ?
-	printf("Affichage de la map des inodes :\n");
+// tester ptr ?
+	printf("\nAffichage de la map des inodes :\n");
 
 	for (i = 0; i < ptr->nb_inodes; i = i + 1)
 		printf("%d", info_map(inodes, i));

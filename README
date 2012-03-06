@@ -1,9 +1,17 @@
-Projet ramdisk : version du 4 Mars 2012
+Projet ramdisk : version du 6 Mars 2012
 
 Pour compiler :
-	gcc src/ramdisk.c src/main.c -Wall -o projet
+	 gcc src/*.c tests/*.c -Wall -o projet
+
 
 Tester les fuites mémoires avec Valgrind sous ubuntu :
 	valgrind --tool=memcheck --leak-check=full --leak-resolution=high --show-reachable=yes ./projet
 
 
+- Nouveautés : 
+				+ Code d'erreur ERREUR en define 
+				+ recuperer_id(map) : retourne le premier endroit disponible dans une map et le met à 1
+					Exemple : j'ai besoin d'un bloc : je fais recuperer_id(bloc) je récupère par exemple 12 
+					alors je peux utiliser le bloc 12 et son état est mis à 1
+				+ liberer_id(map,id) : c'est juste un modifier_map(map, id, 0);
+				+ Test des fonctions 	

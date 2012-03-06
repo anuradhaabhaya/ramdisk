@@ -37,8 +37,14 @@
 
 #define MAX 30 /* taille du buffer */
 #define NB_FO 10 /* nombre maximum de fichiers ouverts en même temps */
-
 #define FICHIER "mon_disque" /* Nom du fichier où l'on sauvegarde notre disque*/
+
+#define ERREUR -1 /* Code d'erreur */
+
+/* Verifications */
+#define BLOC_VALIDE(id) (((id) < BLOCS_RESTANTS) && ((id) >= 0))
+#define INODE_VALIDE(id) (((id) < NB_INODES) && ((id) >= 0))
+#define EST_BIT(bit) ((bit) == 0 || (bit) == 1)
 
 /*
  ==========================
@@ -50,67 +56,71 @@
 
 typedef char octet;
 
-typedef enum {
-    ordinaire,
-    repertoire
+typedef enum
+{
+	ordinaire, repertoire
 } type_e;
 
-typedef enum {
-    blocs,
-    inodes
+typedef enum
+{
+	blocs, inodes
 } map_e;
 
-typedef enum {
-    lecture,
-    ecriture,
-    lecture_ecriture,
-    ecriture_fin
+typedef enum
+{
+	lecture, ecriture, lecture_ecriture, ecriture_fin
 } flag_e;
 
-typedef struct {
-    octet donnee[TAILLE_BLOC]; /* un bloc est consitué de TAILLE_BLOC octet */
+typedef struct
+{
+	octet donnee[TAILLE_BLOC]; /* un bloc est consitué de TAILLE_BLOC octet */
 } bloc_s;
 
-typedef struct {
-    type_e type; /* type du fichier */
-    uint32_t taille_fichier; /* taille du fichier en octets */
-    time_t dernier_acces; /* date de dernier acces au fichier */
-    uint16_t nb_liens; /* compteur indiquant le nombre de liens physiques sur cet inode */
-    uint16_t bloc_direct[10]; /* indices des 10 blocs directs */
-    uint16_t ind_simple; /* indice du bloc d'indirection simple */
-    uint16_t ind_double; /* indice du bloc d'indirection double */
-    uint16_t ind_triple; /* indice du bloc d'indirection triple */
+typedef struct
+{
+	type_e type; /* type du fichier */
+	uint32_t taille_fichier; /* taille du fichier en octets */
+	time_t dernier_acces; /* date de dernier acces au fichier */
+	uint16_t nb_liens; /* compteur indiquant le nombre de liens physiques sur cet inode */
+	uint16_t bloc_direct[10]; /* indices des 10 blocs directs */
+	uint16_t ind_simple; /* indice du bloc d'indirection simple */
+	uint16_t ind_double; /* indice du bloc d'indirection double */
+	uint16_t ind_triple; /* indice du bloc d'indirection triple */
 } inode_s;
 
-typedef struct {
-    uint32_t taille_sys; /* taille du systeme de fichiers */
-    uint16_t nb_blocs; /* nombre de blocs */
-    uint16_t taille_bloc; /* taille d'un bloc */
-    uint16_t nb_blocs_libres; /* nombre de blocs libres */
-    uint16_t nb_inodes; /* nombre d'inodes */
-    uint16_t nb_inodes_libres; /* nombre d'inodes libres */
-    uint16_t inode_racine; /* l'inode du fichier racine */
+typedef struct
+{
+	uint32_t taille_sys; /* taille du systeme de fichiers */
+	uint16_t nb_blocs; /* nombre de blocs */
+	uint16_t taille_bloc; /* taille d'un bloc */
+	uint16_t nb_blocs_libres; /* nombre de blocs libres */
+	uint16_t nb_inodes; /* nombre d'inodes */
+	uint16_t nb_inodes_libres; /* nombre d'inodes libres */
+	uint16_t inode_racine; /* l'inode du fichier racine */
 } superbloc_s;
 
-typedef struct {
-    bloc_s superbloc; /* le super-bloc : bloc 0 */
-    bloc_s blocs_map; /* donne le status de chaque bloc : bloc 1 */
-    bloc_s inodes_map; /* donne le status de chaque inode : bloc 2 */
-    bloc_s inode[BLOCS_LISTE_INODES]; /* blocs contenant la liste des inodes */
-    bloc_s bloc[BLOCS_RESTANTS]; /* blocs contenant les donnees des fichiers */
+typedef struct
+{
+	bloc_s superbloc; /* le super-bloc : bloc 0 */
+	bloc_s blocs_map; /* donne le status de chaque bloc : bloc 1 */
+	bloc_s inodes_map; /* donne le status de chaque inode : bloc 2 */
+	bloc_s inode[BLOCS_LISTE_INODES]; /* blocs contenant la liste des inodes */
+	bloc_s bloc[BLOCS_RESTANTS]; /* blocs contenant les donnees des fichiers */
 } ramdisk_s;
 
-typedef struct {
-    uint16_t fd;
-    flag_e flags;
-    char buf[MAX];
-    uint16_t reste;
-    char *p;
+typedef struct
+{
+	uint16_t fd;
+	flag_e flags;
+	char buf[MAX];
+	uint16_t reste;
+	char *p;
 } fichier_s;
 
-typedef struct {
-    uint16_t fd;
-    char nom[8 + 1];
+typedef struct
+{
+	uint16_t fd;
+	char nom[8 + 1];
 } descriptif_s;
 
 /*
@@ -142,13 +152,18 @@ void creer_superbloc();
 
 /* Gestion des maps */
 void creer_maps();
+void liberer_id(map_e map, uint16_t id);
+int recuperer_id(map_e map);
+
 octet info_map(map_e map, int pos);
 void modifier_map(map_e map, int pos, uint8_t val);
 octet modifier_octet(octet o, octet masque, uint8_t val);
 
 /* Affichage d'informations : debug */
-void affiche_superbloc();
+void afficher_disque();
+void afficher_superbloc();
 void afficher_map_bloc();
 void afficher_map_inode();
+
 
 #endif /* RAMDISK_H_ */
