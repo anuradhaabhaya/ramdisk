@@ -126,16 +126,24 @@ void creer_maps()
  *
  * 		Action
  * 			Met l'état à 0 de l'id "id" dans la map "map"
+ * 			ET INCREMENTE LE NOMBRE D'INODES/BLOCS disponibles dans le superbloc
  */
 void liberer_id(map_e map, uint16_t id)
 {
-	if (map == blocs)
+	superbloc_s* ptr = (superbloc_s *) &disque.superbloc;
+
+	if (ptr != NULL)
 	{
-		modifier_map(blocs, id, 0);
-	}
-	else if (map == inodes)
-	{
-		modifier_map(inodes, id, 0);
+		if (map == blocs)
+		{
+			modifier_map(blocs, id, 0);
+			ptr->nb_blocs_libres++; // un bloc de +
+		}
+		else if (map == inodes)
+		{
+			modifier_map(inodes, id, 0);
+			ptr->nb_inodes_libres++; // un bloc de -
+		}
 	}
 }
 
@@ -145,6 +153,7 @@ void liberer_id(map_e map, uint16_t id)
  *
  * 		Action
  * 			Récupère le premier bloc/inode disponible et passe son état à utilisé (1)
+ *	 	 	ET DECREMENTE LE NOMBRE D'INODES/BLOCS disponibles dans le superbloc
  *
  * 		Retourne
  * 			Id du premier/inode disponible
@@ -154,6 +163,7 @@ int recuperer_id(map_e map)
 {
 	int i = 0;
 	int max = 0;
+	superbloc_s* p_superbloc = (superbloc_s *) &disque.superbloc;
 
 	if (map == blocs)
 		max = BLOCS_RESTANTS;
@@ -168,9 +178,15 @@ int recuperer_id(map_e map)
 		recup = info_map(map, i); /* On recupere l'état de l'octet à la position i */
 	}
 
-	if (recup != ERREUR) /* On quitte la boucle, on regarde si l'état est valide ( != ERREUR ) */
+	if (recup != ERREUR)
+	{
+		/* On quitte la boucle, on regarde si l'état est valide ( != ERREUR ) */
 		modifier_map(map, i, 1); /* Et on met à 1 dans la map*/
-
+		if (map == blocs)
+			p_superbloc->nb_blocs_libres--;
+		else if (map == inodes)
+			p_superbloc->nb_inodes_libres--;
+	}
 	else
 		i = ERREUR;
 
@@ -235,7 +251,7 @@ void modifier_map(map_e map, int pos, uint8_t val)
 	int num_octet = (pos % (8 * TAILLE_BLOC)) / 8; /* numero de l'octet dans le bloc a modifier */
 	int args_valides = 0;
 
-// Initialisation des variables
+	// Initialisation des variables
 	if (map == blocs && BLOC_VALIDE(pos) && EST_BIT(val))
 	{
 		args_valides = 1;

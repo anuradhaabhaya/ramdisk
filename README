@@ -9,9 +9,13 @@ Tester les fuites mémoires avec Valgrind sous ubuntu :
 
 
 - Nouveautés : 
-				+ Code d'erreur ERREUR en define 
-				+ recuperer_id(map) : retourne le premier endroit disponible dans une map et le met à 1
-					Exemple : j'ai besoin d'un bloc : je fais recuperer_id(bloc) je récupère par exemple 12 
-					alors je peux utiliser le bloc 12 et son état est mis à 1
-				+ liberer_id(map,id) : c'est juste un modifier_map(map, id, 0);
-				+ Test des fonctions 	
+	+ Code d'erreur ERREUR en define 
+	+ recuperer_id(map) : retourne le premier endroit disponible dans une map et le met à 1
+	Exemple : j'ai besoin d'un bloc : je fais recuperer_id(bloc) je récupère par exemple 12 
+	alors je peux utiliser le bloc 12 et son état est mis à 1
+	+ liberer_id(map,id) : c'est juste un modifier_map(map, id, 0);
+liberer map et recup_id incrementent et decrementent nombre bloc inodes 
+disponibles
+				
+				
+				RAJOUTER : DECREMENTER BLOCS LIBRES LORS RAJOUTERs 	
