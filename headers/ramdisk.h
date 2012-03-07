@@ -1,5 +1,3 @@
-
-
 // Remarques :  revoir nombre d'adresses contenues dans un bloc indirect
 //              le préprocesseur ne comprendrait pas sizeof ? oO (lu sur internet, à vérifier)
 #ifndef RAMDISK_H_
@@ -80,13 +78,13 @@ typedef struct
 
 typedef struct
 {
-	uint32_t taille_sys; /* taille du systeme de fichiers */
-	uint16_t nb_blocs; /* nombre de blocs */
-	uint16_t taille_bloc; /* taille d'un bloc */
-	uint16_t nb_blocs_libres; /* nombre de blocs libres */
-	uint16_t nb_inodes; /* nombre d'inodes */
-	uint16_t nb_inodes_libres; /* nombre d'inodes libres */
-	uint16_t inode_racine; /* l'inode du fichier racine */
+	int taille_sys; /* taille du systeme de fichiers */
+	short int nb_blocs; /* nombre de blocs */
+	short int taille_bloc; /* taille d'un bloc */
+	short int nb_blocs_libres; /* nombre de blocs libres */
+	short int nb_inodes; /* nombre d'inodes */
+	short int nb_inodes_libres; /* nombre d'inodes libres */
+	short int inode_racine; /* l'inode du fichier racine */
 } superbloc_s;
 
 typedef struct

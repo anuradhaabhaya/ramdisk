@@ -10,7 +10,7 @@
 /* TEST 1 pour lancer les tests
  * TEST 0 sinon
  */
-#define TESTS 0
+#define TESTS 1
 
 #include "../tests/tests.h"
 
@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 	else
 	{
 		printf("Disque chargé\n");
+
 
 		/* Modifications ... */
 	}
