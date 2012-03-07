@@ -33,7 +33,7 @@
 // A voir si on garde car peut avoir des problèmes avec sizeof ?
 #define BLOCS_LISTE_INODES ((NB_INODES)*(sizeof(inode_s))/(TAILLE_BLOC))+1 /* +1 au cas où impair */
 #define BLOCS_RESTANTS ((NB_BLOCS)-(BLOCS_LISTE_INODES)-3) /* nombre de blocs contenant les blocs de donnees */
-#define BLOCS_IND ((TAILLE_BLOC)/sizeof(uint32_t)) /* nombre d'adresses contenues dans un bloc indirect */
+#define BLOCS_IND ((TAILLE_BLOC)/sizeof(short int)) /* nombre d'adresses contenues dans un bloc indirect */
 
 #define MAX 30 /* taille du buffer */
 #define NB_FO 10 /* nombre maximum de fichiers ouverts en même temps */
