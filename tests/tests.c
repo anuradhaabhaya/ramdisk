@@ -5,9 +5,10 @@
  *      Author: antoine
  */
 
-
 #include "tests.h"
 
-void lancer_les_tests(){
+void lancer_les_tests()
+{
 	tests_ramdisk();
+	tests_inodes();
 }

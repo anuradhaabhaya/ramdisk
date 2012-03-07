@@ -79,13 +79,13 @@ typedef struct
 typedef struct
 {
 	type_e type; /* type du fichier */
-	uint32_t taille_fichier; /* taille du fichier en octets */
+	int taille_fichier; /* taille du fichier en octets */
 	time_t dernier_acces; /* date de dernier acces au fichier */
-	uint16_t nb_liens; /* compteur indiquant le nombre de liens physiques sur cet inode */
-	uint16_t bloc_direct[10]; /* indices des 10 blocs directs */
-	uint16_t ind_simple; /* indice du bloc d'indirection simple */
-	uint16_t ind_double; /* indice du bloc d'indirection double */
-	uint16_t ind_triple; /* indice du bloc d'indirection triple */
+	short int nb_liens; /* compteur indiquant le nombre de liens physiques sur cet inode */
+	short int bloc_direct[10]; /* indices des 10 blocs directs */
+	short int ind_simple; /* indice du bloc d'indirection simple */
+	short int ind_double; /* indice du bloc d'indirection double */
+	short int ind_triple; /* indice du bloc d'indirection triple */
 } inode_s;
 
 typedef struct
@@ -108,31 +108,6 @@ typedef struct
 	bloc_s bloc[BLOCS_RESTANTS]; /* blocs contenant les donnees des fichiers */
 } ramdisk_s;
 
-typedef struct
-{
-	uint16_t fd;
-	flag_e flags;
-	char buf[MAX];
-	uint16_t reste;
-	char *p;
-} fichier_s;
-
-typedef struct
-{
-	uint16_t fd;
-	char nom[8 + 1];
-} descriptif_s;
-
-/*
- ==================
-
- VARIABLES GLOBALES
-
- ==================
- */
-
-fichier_s fichier_ouvert[NB_FO];
-ramdisk_s disque;
 
 /*
  =======================
@@ -150,20 +125,36 @@ int sauvegarder_disque();
 void creer_disque();
 void creer_superbloc();
 
+/* Acces aux zones */
+superbloc_s* recup_ptr_superbloc();
+inode_s* recup_ptr_inode(int n);
+
+/* Gestion des inodes */
+inode_s* recup_ptr_inode(int n);
+int initialiser_inode(inode_s* ptr_inode, type_e type);
+
 /* Gestion des maps */
 void creer_maps();
-void liberer_id(map_e map, uint16_t id);
+void liberer_id(map_e map, int id);
 int recuperer_id(map_e map);
-
 octet info_map(map_e map, int pos);
-void modifier_map(map_e map, int pos, uint8_t val);
-octet modifier_octet(octet o, octet masque, uint8_t val);
+void modifier_map(map_e map, int pos, int val);
+octet modifier_octet(octet o, octet masque, int val);
 
 /* Affichage d'informations : debug */
+
+void afficher_date_inode(inode_s* ptr_inode);
+void afficher_inode(inode_s* ptr_inode);
 void afficher_disque();
 void afficher_superbloc();
 void afficher_map_bloc();
 void afficher_map_inode();
 
+/* Fonction pour les tests */
+void effacer_disque();
+void recopier_liste_inodes(inode_s* tab, int n);
+bloc_s* recup_ptr_donnees(); // pour test
 
 #endif /* RAMDISK_H_ */
+
+

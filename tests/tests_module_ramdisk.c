@@ -7,7 +7,13 @@
 
 #include "tests_module_ramdisk.h"
 
-/* Ensemble des tests de la structure */
+/*
+ *
+ *
+ * Ensemble des tests de la structure
+ *
+ *
+ * */
 void tests_ramdisk()
 {
 	creer_disque(); /* Creation d'un disque */
@@ -15,7 +21,7 @@ void tests_ramdisk()
 
 	sauvegarder_disque(); /* Sauvegarde */
 
-	memset(&disque, 0, sizeof(ramdisk_s)); /* On ecrase tout */
+	effacer_disque();
 
 	charger_disque(); /* On recupere le disque*/
 	verif_superbloc(); /* On vérifie si on a les bonnes données */
@@ -25,7 +31,7 @@ void tests_ramdisk()
 
 void verif_superbloc()
 {
-	superbloc_s *ptr = (superbloc_s *) &disque.superbloc;
+	superbloc_s *ptr = recup_ptr_superbloc();
 
 	assert(ptr->inode_racine == 2);
 	assert(ptr->nb_blocs == NB_BLOCS);
@@ -65,7 +71,7 @@ void verif_maps_crees()
 void modifier_maps()
 {
 	int i;
-	superbloc_s *ptr = (superbloc_s *) &disque.superbloc;
+	superbloc_s *ptr = recup_ptr_superbloc();
 
 	/* Modification des blocs : tout a 1*/
 	for (i = 0; i < BLOCS_RESTANTS; i++)
@@ -98,7 +104,6 @@ void modifier_maps()
 	assert(ptr->nb_blocs_libres == 0);
 	assert(ptr->nb_inodes_libres == 0);
 
-
 	/* Quelques modif */
 
 	/* Liberation */
@@ -127,4 +132,117 @@ void modifier_maps()
 	assert(info_map(inodes, 214) == 1);
 	assert(info_map(blocs, 5) == 1);
 	assert(info_map(blocs, 850) == 1);
+}
+
+/*
+ *
+ *
+ * Tests d'acces aux inodes
+ *
+ *
+ *
+ */
+void tests_inodes()
+{
+	int i, j;
+	bloc_s* ptr = recup_ptr_donnees();
+	test_init_inodes();
+	test_inodes_dans_blocs();
+
+	// On vérifie qu'aucun bloc n'a été modifié
+	for (i = 0; i < BLOCS_LISTE_INODES; i++)
+		for (j = 0; j < TAILLE_BLOC; j++)
+			assert((ptr+i)->donnee[j] == 0);
+
+}
+
+void test_init_inodes()
+{
+	int taille = NB_INODES;
+	inode_s tab[taille];
+	type_e type;
+	int i = 0; // balayer les inodes
+	int j = 0; // balayer les blocs directs
+
+	// Initialisation des inodes du tableau
+	for (i = 0; i < taille; i++)
+	{
+
+		if (i % 2 == 0)
+			type = ordinaire;
+
+		else
+			type = repertoire;
+
+		tab[i].type = type;
+		tab[i].nb_liens = i;
+
+		for (j = 0; j < 10; j++)
+		{
+			tab[i].bloc_direct[j] = i;
+		}
+
+		tab[i].ind_simple = i * 100;
+		tab[i].ind_double = i * 100;
+		tab[i].ind_triple = i * 100;
+
+	}
+
+	// On verifie
+	for (i = 0; i < taille; i++)
+	{
+		if (i % 2 == 0)
+			assert(tab[i].type == ordinaire);
+
+		else
+			assert(tab[i].type == repertoire);
+
+		assert(tab[i].nb_liens == i);
+
+		for (j = 0; j < 10; j++)
+		{
+			assert(tab[i].bloc_direct[j] == i);
+		}
+
+		assert(tab[i].ind_simple == i*100);
+		assert(tab[i].ind_double == i*100);
+		assert(tab[i].ind_triple == i*100);
+	}
+
+	// Le tableau est bien initialisé, on le recopie dans la liste des inodes
+	recopier_liste_inodes(tab, sizeof(tab));
+
+	sauvegarder_disque();
+}
+
+void test_inodes_dans_blocs()
+{
+	charger_disque();
+
+	int i;
+	int j;
+	inode_s* ptr;
+	for (i = 0; i < NB_INODES; i++)
+	{
+		ptr = recup_ptr_inode(i);
+		if (ptr != NULL)
+		{
+			if (i % 2 == 0)
+				assert(ptr->type == ordinaire);
+
+			else
+				assert(ptr->type == repertoire);
+
+			assert(ptr->nb_liens == i);
+
+			for (j = 0; j < 10; j++)
+			{
+				assert(ptr->bloc_direct[j] == i);
+			}
+
+			assert(ptr->ind_simple == i*100);
+			assert(ptr->ind_double == i*100);
+			assert(ptr->ind_triple == i*100);
+		}
+	}
 }
