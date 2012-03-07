@@ -54,11 +54,6 @@ typedef enum
 	blocs, inodes
 } map_e;
 
-typedef enum
-{
-	lecture, ecriture, lecture_ecriture, ecriture_fin
-} flag_e;
-
 typedef struct
 {
 	octet donnee[TAILLE_BLOC]; /* un bloc est consitué de TAILLE_BLOC octet */
@@ -95,7 +90,6 @@ typedef struct
 	bloc_s inode[BLOCS_LISTE_INODES]; /* blocs contenant la liste des inodes */
 	bloc_s bloc[BLOCS_RESTANTS]; /* blocs contenant les donnees des fichiers */
 } ramdisk_s;
-
 
 /*
  =======================
@@ -144,5 +138,4 @@ void recopier_liste_inodes(inode_s* tab, int n);
 bloc_s* recup_ptr_donnees(); // pour test
 
 #endif /* RAMDISK_H_ */
-
 
