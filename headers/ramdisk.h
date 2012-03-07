@@ -1,14 +1,4 @@
-/*
- * Auteur : Anuradha Abhaya
- * Date : 14/01/2011
- *
- * Fichier : ramdisk.h
- * Titre :
- *
- * OS : Ubuntu 11.04 The Natty Narwhal - 32 bits
- * IDE : Eclipse for C/C++ Developers
- *
- */
+
 
 // Remarques :  revoir nombre d'adresses contenues dans un bloc indirect
 //              le préprocesseur ne comprendrait pas sizeof ? oO (lu sur internet, à vérifier)
